@@ -50,12 +50,16 @@ defmodule Twitter.Timeline do
     new_tweets = [tweet | tweets]
     new_state = Map.put(state, :tweets, new_tweets)
 
+    Web.Endpoint.broadcast!("tweets", "new_tweet", tweet)
+
     {:reply, :ok, new_state}
   end
 
   def handle_call({:remove, tweet_id}, _from, %{tweets: tweets} = state) do
     new_tweets = Enum.filter(tweets, &(&1.id != tweet_id))
     new_state = Map.put(state, :tweets, new_tweets)
+
+    Web.Endpoint.broadcast!("tweets", "refresh_list", %{tweets: new_tweets})
 
     {:reply, :ok, new_state}
   end

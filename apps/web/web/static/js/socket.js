@@ -73,4 +73,9 @@ channel.on("refresh_list", msg => {
   $("#tweets-wrapper").scrollTop($("#tweets-wrapper")[0].scrollHeight);
 })
 
+channel.on("new_tweet", tweet => {
+  $tweets.append($('<li>').text(tweet.text))
+  $("#tweets-wrapper").scrollTop($("#tweets-wrapper")[0].scrollHeight);
+})
+
 export default socket

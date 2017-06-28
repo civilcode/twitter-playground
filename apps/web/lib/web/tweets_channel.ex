@@ -7,14 +7,13 @@ defmodule Web.TweetsChannel do
     {:ok, socket}
   end
 
-  def handle_in("new_tweet", tweet, socket) do
-    IO.inspect tweet
-
+  def handle_info({:after_join, _msg}, socket) do
+    push socket, "refresh_list", %{tweets: Twitter.Timeline.tweets}
     {:noreply, socket}
   end
 
-  def handle_info({:after_join, msg}, socket) do
-    push socket, "refresh_list", %{tweets: Twitter.Timeline.tweets}
-    {:noreply, socket}
+  def terminate(reason, socket) do
+    IO.inspect "> leave #{inspect(reason)} socket: #{inspect socket}"
+    :ok
   end
 end
