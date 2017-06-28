@@ -64,7 +64,9 @@ channel.join()
 channel.onError(e => console.log("something went wrong", e))
 channel.onClose(e => console.log("channel closed", e))
 
-channel.on("join", msg => {
+channel.on("refresh_list", msg => {
+  console.log(msg)
+  $tweets.empty()
   for(var tweet of msg.tweets) {
     $tweets.prepend($('<li>').text(tweet.text))
   }
