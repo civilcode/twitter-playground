@@ -40,7 +40,8 @@ defmodule Twitter.Mixfile do
     [
       {:mix_test_watch, "~> 0.3", only: :dev, runtime: false},
       {:extwitter, "~> 0.8"},
-      {:blocking_queue, "~> 1.0"}
+      {:blocking_queue, "~> 1.0"},
+      {:pubsub, "~> 1.0"}
     ]
   end
 end

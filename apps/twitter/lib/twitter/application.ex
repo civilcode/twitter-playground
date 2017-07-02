@@ -7,6 +7,8 @@ defmodule Twitter.Application do
   import Supervisor.Spec, warn: false
 
   def start(_type, _args) do
+    PubSub.start_link()
+
     # Define workers and child supervisors to be supervised
     children = twitter_workers()
 

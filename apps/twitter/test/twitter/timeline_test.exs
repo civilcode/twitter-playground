@@ -3,6 +3,7 @@ defmodule Twitter.TimelineTest do
 
   setup do
     ExTwitterFakeAdapter.start_link()
+    PubSub.start_link()
 
     :ok
   end
@@ -22,6 +23,7 @@ defmodule Twitter.TimelineTest do
   describe "streaming" do
     setup do
       Twitter.Timeline.start_link(adapter: ExTwitterFakeAdapter)
+      PubSub.subscribe(self(), "twitter:timeline")
 
       :ok
     end
@@ -34,6 +36,7 @@ defmodule Twitter.TimelineTest do
       tweets = Twitter.Timeline.tweets
 
       assert tweets == [tweet]
+      assert_received {:new_tweet, ^tweet}
     end
 
     test "ignores messages that are not tweets" do
@@ -58,6 +61,7 @@ defmodule Twitter.TimelineTest do
       tweets = Twitter.Timeline.tweets
 
       assert tweets == [%ExTwitter.Model.Tweet{id: 1}]
+      assert_received {:all_tweets, ^tweets}
     end
   end
 end
