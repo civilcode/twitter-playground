@@ -20,7 +20,10 @@ defmodule Twitter.Application do
 
   defp twitter_workers do
     if Application.get_env(:twitter, :enable_workers, false) do
-      [worker(Twitter.Timeline, [])]
+      [
+        worker(Twitter.Timeline, []),
+        worker(Twitter.Stream, [])
+      ]
     else
       []
     end

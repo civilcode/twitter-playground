@@ -12,6 +12,7 @@ defmodule Web do
       supervisor(Web.Endpoint, []),
       # Start your own worker by calling: Web.Worker.start_link(arg1, arg2, arg3)
       worker(TimelineListener, []),
+      worker(StreamListener, []),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

@@ -55,7 +55,8 @@ socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
 let channel = socket.channel("tweets", {})
-let $tweets  = $("#tweets")
+let $timeline_tweets  = $("#timeline-tweets")
+let $stream_tweets  = $("#stream-tweets")
 
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
@@ -66,16 +67,21 @@ channel.onClose(e => console.log("channel closed", e))
 
 channel.on("refresh_list", msg => {
   console.log(msg)
-  $tweets.empty()
+  $timeline_tweets.empty()
   for(var tweet of msg.tweets) {
-    $tweets.prepend($('<li>').text(tweet.text))
+    $timeline_tweets.prepend($('<li>').text(tweet.text))
   }
-  $("#tweets-wrapper").scrollTop($("#tweets-wrapper")[0].scrollHeight);
+  $("#timeline-tweets-wrapper").scrollTop($("#timeline-tweets-wrapper")[0].scrollHeight);
 })
 
-channel.on("new_tweet", tweet => {
-  $tweets.append($('<li>').text(tweet.text))
-  $("#tweets-wrapper").scrollTop($("#tweets-wrapper")[0].scrollHeight);
+channel.on("new_timeline_tweet", tweet => {
+  $timeline_tweets.append($('<li>').text(tweet.text))
+  $("#timeline-tweets-wrapper").scrollTop($("#timeline-tweets-wrapper")[0].scrollHeight);
+})
+
+channel.on("new_stream_tweet", tweet => {
+  $stream_tweets.append($('<li>').text(tweet.text))
+  $("#stream-tweets-wrapper").scrollTop($("#stream-tweets-wrapper")[0].scrollHeight);
 })
 
 export default socket
