@@ -1,4 +1,4 @@
-defmodule ExTwitterAdapter do
+defmodule TwitterAdapter do
   def fetch_user_timeline do
     ExTwitter.user_timeline
   end

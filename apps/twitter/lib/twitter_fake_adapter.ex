@@ -1,4 +1,4 @@
-defmodule ExTwitterFakeAdapter do
+defmodule TwitterFakeAdapter do
   # Public interface
 
   def start_link(_opts \\ []) do
