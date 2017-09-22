@@ -2,7 +2,7 @@ defmodule Web.TweetsChannel do
   use Phoenix.Channel
 
   def join("tweets", message, socket) do
-    send(self, {:after_join, message})
+    send(self(), {:after_join, message})
 
     {:ok, socket}
   end
