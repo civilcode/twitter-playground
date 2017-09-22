@@ -1,4 +1,4 @@
-defmodule TimelineListener do
+defmodule TwitterTimelineListener do
   use GenServer
 
   def start_link(opts \\ []) do

@@ -8,7 +8,7 @@ defmodule Web.TweetsChannel do
   end
 
   def handle_info({:after_join, _msg}, socket) do
-    push socket, "refresh_list", %{tweets: Twitter.Timeline.tweets}
+    push(socket, "refresh_list", %{tweets: Twitter.Timeline.tweets})
     {:noreply, socket}
   end
 
