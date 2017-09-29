@@ -24,7 +24,7 @@ let TwitterTimeline = {
   _refreshAll(tweets) {
     this.tweets.empty()
     for(var tweet of tweets) {
-      this.tweets.prepend($('<li>').text(tweet.text))
+      this.tweets.append($('<li>').text(tweet.text))
   }
     this.container.scrollTop(this.container[0].scrollHeight)
   },
