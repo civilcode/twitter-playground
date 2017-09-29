@@ -11,6 +11,7 @@ defmodule Twitter.ExTwitterAdapter do
 
   def get_user_stream(_opts \\ []) do
     ExTwitter.stream_user(with: :user, receive_messages: true)
+    |> filter_stream
   end
 
   def parse_tweets(tweets) do
@@ -24,4 +25,14 @@ defmodule Twitter.ExTwitterAdapter do
   def parse_tweet(%ExTwitter.Model.DeletedTweet{status: %{id: id}}) do
     %TweetDeletion{tweet_id: id}
   end
+
+  def filter_stream(stream) do
+    stream
+    |> Stream.filter(&valid_message?/1)
+    |> Stream.map(&parse_tweet/1)
+  end
+
+  defp valid_message?(%ExTwitter.Model.Tweet{}), do: true
+  defp valid_message?(%ExTwitter.Model.DeletedTweet{}), do: true
+  defp valid_message?(_), do: false
 end

@@ -68,22 +68,22 @@ defmodule Twitter.Timeline do
       for message <- stream do
         # TODO: Use Logger.debug
         # IO.puts("Received #{inspect(message)}")
-        handle_message(timeline, message)
+        process_message(timeline, message)
       end
     end)
   end
 
-  defp handle_message(timeline, %Tweet{} = tweet) do
+  defp process_message(timeline, %Tweet{} = tweet) do
     GenServer.call(timeline, {:push, tweet})
     {:ok, timeline}
   end
 
-  defp handle_message(timeline, %TweetDeletion{tweet_id: tweet_id}) do
+  defp process_message(timeline, %TweetDeletion{tweet_id: tweet_id}) do
     GenServer.call(timeline, {:remove, tweet_id})
     {:ok, timeline}
   end
 
-  defp handle_message(_timeline, message) do
+  defp process_message(_timeline, message) do
     {:error, {:unknown_message, message}}
   end
 end

@@ -55,12 +55,6 @@ defmodule Twitter.TimelineTest do
       assert_receive {:new_tweet, ^tweet}, 100
     end
 
-    test "does not publish non-tweets messages received from the adapter", %{adapter: adapter} do
-      message = %ExTwitter.Model.User{}
-      adapter.stream_tweet(message)
-      refute_receive {:new_tweet, _}, 100
-    end
-
     test "publishes full list of tweets upon reception of a deleted tweet form the adapter",
       %{adapter: adapter}
     do
