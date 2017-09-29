@@ -11,9 +11,8 @@ defmodule Twitter.TimelineTest do
     :ok
   end
 
-  describe "initialization" do
-    # TODO: fix doc string
-    test "get the latest tweets for the user" do
+  describe "initializing the timeline" do
+    test "initializes the state with existing user's tweets" do
       # TODO: have a generic Tweet model to be decoupled from ExTwitter
       tweet = %ExTwitter.Model.Tweet{text: "sample tweet text"}
       TwitterFakeAdapter.put_tweet(tweet)
@@ -31,7 +30,7 @@ defmodule Twitter.TimelineTest do
     end
   end
 
-  describe "streaming" do
+  describe "publishing tweets" do
     setup do
       # TODO: Pass pubsub topic to start_link
       {:ok, pid} = Twitter.Timeline.start_link(adapter: TwitterFakeAdapter)
@@ -45,26 +44,25 @@ defmodule Twitter.TimelineTest do
       :ok
     end
 
-    test "receives a new tweet from the stream" do
+    test "publishes a new tweet" do
       tweet = %ExTwitter.Model.Tweet{text: "new tweet"}
       TwitterFakeAdapter.stream_tweet(tweet)
-
       assert_receive {:new_tweet, ^tweet}, 100
     end
 
-    test "ignores messages that are not tweets" do
+    test "does not publish non-tweets messages received from the adapter" do
       message = %ExTwitter.Model.User{}
       TwitterFakeAdapter.stream_tweet(message)
-
       refute_receive {:new_tweet, _}, 100
     end
 
-    test "removes a deleted tweet" do
+    test "publishes full list of tweets upon reception of a deleted tweet form the adapter" do
       tweets = [
         %ExTwitter.Model.Tweet{id: 1},
         %ExTwitter.Model.Tweet{id: 2}
       ]
       deleted_tweet = %ExTwitter.Model.DeletedTweet{status: %{id: 2}}
+
       Enum.each(tweets ++ [deleted_tweet], &TwitterFakeAdapter.stream_tweet/1)
 
       expected_tweets = [%ExTwitter.Model.Tweet{id: 1}]
