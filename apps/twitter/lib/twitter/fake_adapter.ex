@@ -1,4 +1,6 @@
 defmodule Twitter.FakeAdapter do
+  @behaviour Twitter.Adapter
+
   # Public interface
 
   def start_link(_opts \\ []) do

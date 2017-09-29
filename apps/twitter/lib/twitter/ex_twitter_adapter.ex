@@ -1,5 +1,6 @@
 defmodule Twitter.ExTwitterAdapter do
-  # TODO: add behaviour
+  @behaviour Twitter.Adapter
+
   alias Twitter.{Tweet, TweetDeletion}
 
   @spec fetch_user_timeline() :: [Tweet.t]
@@ -9,7 +10,8 @@ defmodule Twitter.ExTwitterAdapter do
     |> Enum.reverse
   end
 
-  def get_user_stream(_opts \\ []) do
+  @spec get_user_stream() :: Stream.t
+  def get_user_stream do
     ExTwitter.stream_user(with: :user, receive_messages: true)
     |> filter_stream
   end
