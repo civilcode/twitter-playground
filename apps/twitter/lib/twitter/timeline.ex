@@ -57,8 +57,7 @@ defmodule Twitter.Timeline do
     timeline = self()
 
     # TODO: use GenStage?
-    # TODO: use Task instead of spawn
-    spawn(fn ->
+    Task.start_link(fn ->
       stream = adapter.get_user_stream()
       for message <- stream do
         # TODO: Use Logger.debug
