@@ -1,7 +1,7 @@
 defmodule Twitter.TimelineTest do
   use ExUnit.Case, async: false
 
-  alias Twitter.{FakeAdapter, Timeline}
+  alias Twitter.{FakeAdapter, Timeline, Tweet, TweetDeletion}
 
   setup do
     {:ok, pid} = FakeAdapter.start_link()
@@ -15,16 +15,17 @@ defmodule Twitter.TimelineTest do
 
   describe "initializing the timeline" do
     test "initializes the state with existing user's tweets" do
-      # TODO: have a generic Tweet model to be decoupled from ExTwitter
-      tweet = %ExTwitter.Model.Tweet{text: "sample tweet text"}
+      tweet = %Tweet{text: ":text:"}
       FakeAdapter.put_tweet(tweet)
 
       {:ok, pid} = Timeline.start_link(adapter: FakeAdapter)
 
       # TODO: return tweets
-      texts = Timeline.texts
+      tweets = Timeline.tweets
 
-      assert texts == ["sample tweet text"]
+      assert length(tweets) == 1
+      first_tweet = List.first(tweets)
+      assert %Tweet{text: ":text:"} = first_tweet
 
       on_exit fn ->
         assert_down(pid)
@@ -47,7 +48,7 @@ defmodule Twitter.TimelineTest do
     end
 
     test "publishes a new tweet" do
-      tweet = %ExTwitter.Model.Tweet{text: "new tweet"}
+      tweet = %Tweet{text: ":text:"}
       FakeAdapter.stream_tweet(tweet)
       assert_receive {:new_tweet, ^tweet}, 100
     end
@@ -60,14 +61,14 @@ defmodule Twitter.TimelineTest do
 
     test "publishes full list of tweets upon reception of a deleted tweet form the adapter" do
       tweets = [
-        %ExTwitter.Model.Tweet{id: 1},
-        %ExTwitter.Model.Tweet{id: 2}
+        %Tweet{id: 1},
+        %Tweet{id: 2}
       ]
-      deleted_tweet = %ExTwitter.Model.DeletedTweet{status: %{id: 2}}
+      deleted_tweet = %TweetDeletion{tweet_id: 2}
 
       Enum.each(tweets ++ [deleted_tweet], &FakeAdapter.stream_tweet/1)
 
-      expected_tweets = [%ExTwitter.Model.Tweet{id: 1}]
+      expected_tweets = [%Tweet{id: 1}]
       assert_receive {:all_tweets, ^expected_tweets}, 100
     end
   end

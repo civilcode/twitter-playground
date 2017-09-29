@@ -11,16 +11,18 @@ defmodule Twitter.FakeAdapter do
     {:ok, %{queue: queue, tweets: []}}
   end
 
-  def put_tweet(tweet) do
-    GenServer.call(__MODULE__, {:set_tweets, List.wrap(tweet)})
-  end
-
   def fetch_user_timeline do
     GenServer.call(__MODULE__, :tweets)
   end
 
   def get_user_stream do
     GenServer.call(__MODULE__, :get_stream)
+  end
+
+  # Functions for simulating a real adapter
+
+  def put_tweet(tweet) do
+    GenServer.call(__MODULE__, {:set_tweets, List.wrap(tweet)})
   end
 
   def stream_tweet(tweet) do

@@ -1,7 +1,7 @@
 defmodule Twitter.Timeline do
   use GenServer
 
-  alias ExTwitter.Model.{Tweet, DeletedTweet}
+  alias Twitter.{Tweet, TweetDeletion}
 
   # Public interface
 
@@ -85,7 +85,7 @@ defmodule Twitter.Timeline do
     {:ok, timeline}
   end
 
-  defp handle_message(timeline, %DeletedTweet{status: %{id: tweet_id}}) do
+  defp handle_message(timeline, %TweetDeletion{tweet_id: tweet_id}) do
     GenServer.call(timeline, {:remove, tweet_id})
     {:ok, timeline}
   end
