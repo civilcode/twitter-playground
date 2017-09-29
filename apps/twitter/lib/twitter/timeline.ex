@@ -22,7 +22,7 @@ defmodule Twitter.Timeline do
   @doc """
   Returns the tweets, the first one being the most recent one.
   """
-  # TODO: is the order ok?
+  @spec tweets :: [Tweet.t]
   def tweets do
     GenServer.call(__MODULE__, :list)
   end
