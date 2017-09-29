@@ -1,8 +1,10 @@
 defmodule Twitter.TimelineTest do
   use ExUnit.Case, async: false
 
+  alias Twitter.{FakeAdapter, Timeline}
+
   setup do
-    {:ok, pid} = TwitterFakeAdapter.start_link()
+    {:ok, pid} = FakeAdapter.start_link()
 
     on_exit fn ->
       assert_down(pid)
@@ -15,12 +17,12 @@ defmodule Twitter.TimelineTest do
     test "initializes the state with existing user's tweets" do
       # TODO: have a generic Tweet model to be decoupled from ExTwitter
       tweet = %ExTwitter.Model.Tweet{text: "sample tweet text"}
-      TwitterFakeAdapter.put_tweet(tweet)
+      FakeAdapter.put_tweet(tweet)
 
-      {:ok, pid} = Twitter.Timeline.start_link(adapter: TwitterFakeAdapter)
+      {:ok, pid} = Timeline.start_link(adapter: FakeAdapter)
 
       # TODO: return tweets
-      texts = Twitter.Timeline.texts
+      texts = Timeline.texts
 
       assert texts == ["sample tweet text"]
 
@@ -35,7 +37,7 @@ defmodule Twitter.TimelineTest do
       topic = "test:timeline"
       PubSub.start_link()
       PubSub.subscribe(self(), topic)
-      {:ok, pid} = Twitter.Timeline.start_link(adapter: TwitterFakeAdapter, topic: topic)
+      {:ok, pid} = Timeline.start_link(adapter: FakeAdapter, topic: topic)
 
       on_exit fn ->
         assert_down(pid)
@@ -46,13 +48,13 @@ defmodule Twitter.TimelineTest do
 
     test "publishes a new tweet" do
       tweet = %ExTwitter.Model.Tweet{text: "new tweet"}
-      TwitterFakeAdapter.stream_tweet(tweet)
+      FakeAdapter.stream_tweet(tweet)
       assert_receive {:new_tweet, ^tweet}, 100
     end
 
     test "does not publish non-tweets messages received from the adapter" do
       message = %ExTwitter.Model.User{}
-      TwitterFakeAdapter.stream_tweet(message)
+      FakeAdapter.stream_tweet(message)
       refute_receive {:new_tweet, _}, 100
     end
 
@@ -63,7 +65,7 @@ defmodule Twitter.TimelineTest do
       ]
       deleted_tweet = %ExTwitter.Model.DeletedTweet{status: %{id: 2}}
 
-      Enum.each(tweets ++ [deleted_tweet], &TwitterFakeAdapter.stream_tweet/1)
+      Enum.each(tweets ++ [deleted_tweet], &FakeAdapter.stream_tweet/1)
 
       expected_tweets = [%ExTwitter.Model.Tweet{id: 1}]
       assert_receive {:all_tweets, ^expected_tweets}, 100

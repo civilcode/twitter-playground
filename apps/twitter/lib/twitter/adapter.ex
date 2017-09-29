@@ -1,4 +1,4 @@
-defmodule TwitterAdapter do
+defmodule Twitter.Adapter do
   # TODO: add behaviour
 
   def fetch_user_timeline do
