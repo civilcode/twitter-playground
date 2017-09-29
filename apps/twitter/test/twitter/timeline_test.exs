@@ -16,15 +16,18 @@ defmodule Twitter.TimelineTest do
 
   describe "initializing the timeline" do
     test "initializes the state with existing user's tweets", %{adapter: adapter} do
-      adapter.put_tweet(%Tweet{text: ":text:"})
+      adapter.put_tweets([
+        %Tweet{text: ":tweet-2:"},
+        %Tweet{text: ":tweet-1:"}
+      ])
 
       {:ok, pid} = Timeline.start_link()
 
       tweets = Timeline.tweets
-      assert length(tweets) == 1
+      assert length(tweets) == 2
 
       first_tweet = List.first(tweets)
-      assert %Tweet{text: ":text:"} = first_tweet
+      assert %Tweet{text: ":tweet-2:"} = first_tweet
 
       on_exit fn ->
         assert_down(pid)

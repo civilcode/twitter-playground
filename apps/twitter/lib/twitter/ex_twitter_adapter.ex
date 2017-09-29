@@ -6,6 +6,7 @@ defmodule Twitter.ExTwitterAdapter do
   def fetch_user_timeline do
     ExTwitter.user_timeline
     |> parse_tweets
+    |> Enum.reverse
   end
 
   def get_user_stream(_opts \\ []) do

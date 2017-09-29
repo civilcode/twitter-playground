@@ -21,8 +21,8 @@ defmodule Twitter.FakeAdapter do
 
   # Functions for simulating a real adapter
 
-  def put_tweet(tweet) do
-    GenServer.call(__MODULE__, {:set_tweets, List.wrap(tweet)})
+  def put_tweets(tweets) do
+    GenServer.call(__MODULE__, {:set_tweets, tweets})
   end
 
   def stream_tweet(tweet) do
