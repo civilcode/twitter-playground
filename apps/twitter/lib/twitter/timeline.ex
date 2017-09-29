@@ -27,13 +27,6 @@ defmodule Twitter.Timeline do
     GenServer.call(__MODULE__, :list)
   end
 
-  @doc """
-  Returns the texts, the first one being the most recent one.
-  """
-  def texts do
-    Enum.map(tweets(), &(&1.text))
-  end
-
   # Server Callbacks
 
   def handle_cast(:init, %{adapter: adapter} = state) do
