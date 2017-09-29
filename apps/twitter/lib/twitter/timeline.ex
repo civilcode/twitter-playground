@@ -8,14 +8,15 @@ defmodule Twitter.Timeline do
   def start_link(opts \\ []) do
     options = Keyword.put_new(opts, :name, __MODULE__)
     adapter = Keyword.get(opts, :adapter, TwitterAdapter)
-    GenServer.start_link(__MODULE__, adapter, options)
+    topic = Keyword.get(opts, :topic, "twitter:timeline")
+    GenServer.start_link(__MODULE__, [adapter, topic], options)
   end
 
-  def init(adapter) do
+  def init([adapter, topic]) do
     # Defer initialization to prevent timeout
     GenServer.cast(self(), :init)
 
-    {:ok, %{adapter: adapter, tweets: []}}
+    {:ok, %{adapter: adapter, tweets: [], topic: topic}}
   end
 
   @doc """
@@ -47,14 +48,14 @@ defmodule Twitter.Timeline do
   end
 
   def handle_call({:push, tweet}, _from, %{tweets: tweets} = state) do
-    PubSub.publish("twitter:timeline", {:new_tweet, tweet})
+    PubSub.publish(state.topic, {:new_tweet, tweet})
 
     {:reply, :ok, %{state | tweets: [tweet | tweets]}}
   end
 
   def handle_call({:remove, tweet_id}, _from, %{tweets: tweets} = state) do
     new_tweets = Enum.filter(tweets, &(&1.id != tweet_id))
-    PubSub.publish("twitter:timeline", {:all_tweets, new_tweets})
+    PubSub.publish(state.topic, {:all_tweets, new_tweets})
 
     {:reply, :ok, %{state | tweets: new_tweets}}
   end

@@ -32,10 +32,10 @@ defmodule Twitter.TimelineTest do
 
   describe "publishing tweets" do
     setup do
-      # TODO: Pass pubsub topic to start_link
-      {:ok, pid} = Twitter.Timeline.start_link(adapter: TwitterFakeAdapter)
+      topic = "test:timeline"
       PubSub.start_link()
-      PubSub.subscribe(self(), "twitter:timeline")
+      PubSub.subscribe(self(), topic)
+      {:ok, pid} = Twitter.Timeline.start_link(adapter: TwitterFakeAdapter, topic: topic)
 
       on_exit fn ->
         assert_down(pid)
