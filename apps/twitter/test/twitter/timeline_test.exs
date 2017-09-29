@@ -1,8 +1,12 @@
 defmodule Twitter.TimelineTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
 
   setup do
-    TwitterFakeAdapter.start_link()
+    {:ok, pid} = TwitterFakeAdapter.start_link()
+
+    on_exit fn ->
+      assert_down(pid)
+    end
 
     :ok
   end
@@ -13,21 +17,30 @@ defmodule Twitter.TimelineTest do
       # TODO: have a generic Tweet model to be decoupled from ExTwitter
       tweet = %ExTwitter.Model.Tweet{text: "sample tweet text"}
       TwitterFakeAdapter.put_tweet(tweet)
-      Twitter.Timeline.start_link(adapter: TwitterFakeAdapter)
+
+      {:ok, pid} = Twitter.Timeline.start_link(adapter: TwitterFakeAdapter)
 
       # TODO: return tweets
       texts = Twitter.Timeline.texts
 
       assert texts == ["sample tweet text"]
+
+      on_exit fn ->
+        assert_down(pid)
+      end
     end
   end
 
   describe "streaming" do
     setup do
       # TODO: Pass pubsub topic to start_link
-      Twitter.Timeline.start_link(adapter: TwitterFakeAdapter)
+      {:ok, pid} = Twitter.Timeline.start_link(adapter: TwitterFakeAdapter)
       PubSub.start_link()
       PubSub.subscribe(self(), "twitter:timeline")
+
+      on_exit fn ->
+        assert_down(pid)
+      end
 
       :ok
     end
@@ -57,5 +70,11 @@ defmodule Twitter.TimelineTest do
       expected_tweets = [%ExTwitter.Model.Tweet{id: 1}]
       assert_receive {:all_tweets, ^expected_tweets}, 100
     end
+  end
+
+  # As suggested here: https://elixirforum.com/t/how-to-stop-otp-processes-started-in-exunit-setup-callback/3794/5
+  defp assert_down(pid) do
+    ref = Process.monitor(pid)
+    assert_receive {:DOWN, ^ref, _, _, _}
   end
 end
