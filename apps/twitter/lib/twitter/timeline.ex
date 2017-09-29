@@ -31,7 +31,7 @@ defmodule Twitter.Timeline do
 
   def handle_cast(:init, %{adapter: adapter} = state) do
     listen_to_user_stream(adapter)
-    latest_tweets = fetch_latest_tweets(adapter)
+    latest_tweets = adapter.fetch_user_timeline()
 
     {:noreply, %{state | tweets: latest_tweets}}
   end
@@ -51,11 +51,6 @@ defmodule Twitter.Timeline do
     PubSub.publish(state.topic, {:all_tweets, new_tweets})
 
     {:reply, :ok, %{state | tweets: new_tweets}}
-  end
-
-  defp fetch_latest_tweets(adapter) do
-    # TODO: give the same name and then inline
-    adapter.fetch_user_timeline()
   end
 
   defp listen_to_user_stream(adapter) do

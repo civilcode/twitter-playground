@@ -13,10 +13,12 @@ defmodule Twitter.FakeAdapter do
     {:ok, %{queue: queue, tweets: []}}
   end
 
+  @spec fetch_user_timeline() :: [Twitter.Tweet.t]
   def fetch_user_timeline do
     GenServer.call(__MODULE__, :tweets)
   end
 
+  @spec get_user_stream() :: Stream.t
   def get_user_stream do
     GenServer.call(__MODULE__, :get_stream)
   end
