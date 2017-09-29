@@ -1,29 +1,28 @@
 defmodule Twitter.TimelineTest do
   use ExUnit.Case, async: false
 
-  alias Twitter.{FakeAdapter, Timeline, Tweet, TweetDeletion}
+  alias Twitter.{Timeline, Tweet, TweetDeletion}
 
   setup do
-    {:ok, pid} = FakeAdapter.start_link()
+    adapter = Application.get_env(:twitter, :adapter)
+    {:ok, pid} = adapter.start_link()
 
     on_exit fn ->
       assert_down(pid)
     end
 
-    :ok
+    [adapter: adapter]
   end
 
   describe "initializing the timeline" do
-    test "initializes the state with existing user's tweets" do
-      tweet = %Tweet{text: ":text:"}
-      FakeAdapter.put_tweet(tweet)
+    test "initializes the state with existing user's tweets", %{adapter: adapter} do
+      adapter.put_tweet(%Tweet{text: ":text:"})
 
-      {:ok, pid} = Timeline.start_link(adapter: FakeAdapter)
+      {:ok, pid} = Timeline.start_link()
 
-      # TODO: return tweets
       tweets = Timeline.tweets
-
       assert length(tweets) == 1
+
       first_tweet = List.first(tweets)
       assert %Tweet{text: ":text:"} = first_tweet
 
@@ -38,7 +37,7 @@ defmodule Twitter.TimelineTest do
       topic = "test:timeline"
       PubSub.start_link()
       PubSub.subscribe(self(), topic)
-      {:ok, pid} = Timeline.start_link(adapter: FakeAdapter, topic: topic)
+      {:ok, pid} = Timeline.start_link(topic: topic)
 
       on_exit fn ->
         assert_down(pid)
@@ -47,26 +46,28 @@ defmodule Twitter.TimelineTest do
       :ok
     end
 
-    test "publishes a new tweet" do
+    test "publishes a new tweet", %{adapter: adapter} do
       tweet = %Tweet{text: ":text:"}
-      FakeAdapter.stream_tweet(tweet)
+      adapter.stream_tweet(tweet)
       assert_receive {:new_tweet, ^tweet}, 100
     end
 
-    test "does not publish non-tweets messages received from the adapter" do
+    test "does not publish non-tweets messages received from the adapter", %{adapter: adapter} do
       message = %ExTwitter.Model.User{}
-      FakeAdapter.stream_tweet(message)
+      adapter.stream_tweet(message)
       refute_receive {:new_tweet, _}, 100
     end
 
-    test "publishes full list of tweets upon reception of a deleted tweet form the adapter" do
+    test "publishes full list of tweets upon reception of a deleted tweet form the adapter",
+      %{adapter: adapter}
+    do
       tweets = [
         %Tweet{id: 1},
         %Tweet{id: 2}
       ]
       deleted_tweet = %TweetDeletion{tweet_id: 2}
 
-      Enum.each(tweets ++ [deleted_tweet], &FakeAdapter.stream_tweet/1)
+      Enum.each(tweets ++ [deleted_tweet], &adapter.stream_tweet/1)
 
       expected_tweets = [%Tweet{id: 1}]
       assert_receive {:all_tweets, ^expected_tweets}, 100

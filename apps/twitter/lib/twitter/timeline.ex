@@ -6,9 +6,9 @@ defmodule Twitter.Timeline do
   # Public interface
 
   def start_link(opts \\ []) do
-    options = Keyword.put_new(opts, :name, __MODULE__)
-    adapter = Keyword.get(opts, :adapter, Twitter.Adapter)
+    adapter = Application.get_env(:twitter, :adapter)
     topic = Keyword.get(opts, :topic, "twitter:timeline")
+    options = Keyword.put_new(opts, :name, __MODULE__)
     GenServer.start_link(__MODULE__, [adapter, topic], options)
   end
 
