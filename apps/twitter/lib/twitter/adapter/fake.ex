@@ -1,4 +1,4 @@
-defmodule Twitter.FakeAdapter do
+defmodule Twitter.Adapter.Fake do
   @behaviour Twitter.Adapter
 
   # Public interface

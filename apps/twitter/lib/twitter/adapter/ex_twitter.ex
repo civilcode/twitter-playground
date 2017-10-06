@@ -1,4 +1,4 @@
-defmodule Twitter.ExTwitterAdapter do
+defmodule Twitter.Adapter.ExTwitter do
   @behaviour Twitter.Adapter
 
   alias Twitter.{Tweet, TweetDeletion}

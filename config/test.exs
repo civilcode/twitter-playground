@@ -1,4 +1,4 @@
 use Mix.Config
 
 config :twitter,
-  adapter: Twitter.FakeAdapter
+  adapter: Twitter.Adapter.Fake

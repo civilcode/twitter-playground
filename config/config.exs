@@ -3,7 +3,7 @@
 use Mix.Config
 
 config :twitter,
-  adapter: Twitter.ExTwitterAdapter
+  adapter: Twitter.Adapter.ExTwitter
 
 # By default, the umbrella project as well as each child
 # application will require this configuration file, ensuring
