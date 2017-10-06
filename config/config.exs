@@ -3,7 +3,6 @@
 use Mix.Config
 
 config :twitter,
-  enable_workers: true,
   adapter: Twitter.ExTwitterAdapter
 
 # By default, the umbrella project as well as each child
