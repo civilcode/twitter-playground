@@ -1,5 +1,6 @@
 defmodule Twitter.Timeline do
   use GenServer
+  require Logger
 
   alias Twitter.{Tweet, TweetDeletion}
 
@@ -32,8 +33,10 @@ defmodule Twitter.Timeline do
   def handle_cast(:init, %{adapter: adapter} = state) do
     listen_to_user_stream(adapter)
     latest_tweets = adapter.fetch_user_timeline()
+    new_state = %{state | tweets: latest_tweets}
+    Logger.debug("Initial state: #{inspect(new_state)}")
 
-    {:noreply, %{state | tweets: latest_tweets}}
+    {:noreply, new_state}
   end
 
   def handle_call(:list, _from, %{tweets: tweets} = state) do
@@ -56,12 +59,10 @@ defmodule Twitter.Timeline do
   defp listen_to_user_stream(adapter) do
     timeline = self()
 
-    # TODO: use GenStage?
     Task.start_link(fn ->
       stream = adapter.get_user_stream()
       for message <- stream do
-        # TODO: Use Logger.debug
-        # IO.puts("Received #{inspect(message)}")
+        Logger.debug("Received #{inspect(message)}")
         process_message(timeline, message)
       end
     end)
