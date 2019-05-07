@@ -1,4 +1,5 @@
-defmodule TwitterTimelineListener do
+# TODO: move under Web namespace
+defmodule Web.TwitterTimelineListener do
   use GenServer
 
   def start_link(opts \\ []) do

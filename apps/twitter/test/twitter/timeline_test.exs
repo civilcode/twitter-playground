@@ -1,67 +1,79 @@
 defmodule Twitter.TimelineTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
+
+  alias Twitter.{Timeline, Tweet, TweetDeletion}
 
   setup do
-    TwitterFakeAdapter.start_link()
-    PubSub.start_link()
+    adapter = Application.get_env(:twitter, :adapter)
+    {:ok, pid} = adapter.start_link()
 
-    :ok
+    on_exit fn ->
+      assert_down(pid)
+    end
+
+    [adapter: adapter]
   end
 
-  describe "initialization" do
-    test "get the latest tweets for the user" do
-      tweet = %ExTwitter.Model.Tweet{text: "sample tweet text"}
-      TwitterFakeAdapter.set_initial_tweets(tweet)
-      Twitter.Timeline.start_link(adapter: TwitterFakeAdapter)
+  describe "initializing the timeline" do
+    test "initializes the state with existing user's tweets", %{adapter: adapter} do
+      adapter.put_tweets([
+        %Tweet{text: ":tweet-2:"},
+        %Tweet{text: ":tweet-1:"}
+      ])
 
-      texts = Twitter.Timeline.texts
+      {:ok, pid} = Timeline.start_link()
 
-      assert texts == ["sample tweet text"]
+      tweets = Timeline.tweets
+      assert length(tweets) == 2
+
+      first_tweet = List.first(tweets)
+      assert %Tweet{text: ":tweet-2:"} = first_tweet
+
+      on_exit fn ->
+        assert_down(pid)
+      end
     end
   end
 
-  describe "streaming" do
+  describe "publishing tweets" do
     setup do
-      Twitter.Timeline.start_link(adapter: TwitterFakeAdapter)
-      PubSub.subscribe(self(), "twitter:timeline")
+      topic = "test:timeline"
+      PubSub.start_link()
+      PubSub.subscribe(self(), topic)
+      {:ok, pid} = Timeline.start_link(topic: topic)
+
+      on_exit fn ->
+        assert_down(pid)
+      end
 
       :ok
     end
 
-    test "receives a new tweet from the stream" do
-      tweet = %ExTwitter.Model.Tweet{text: "new tweet"}
-      TwitterFakeAdapter.simulate_incoming_message(tweet)
-      :timer.sleep(100)
-
-      tweets = Twitter.Timeline.tweets
-
-      assert tweets == [tweet]
-      assert_received {:new_tweet, ^tweet}
+    test "publishes a new tweet", %{adapter: adapter} do
+      tweet = %Tweet{text: ":text:"}
+      adapter.stream_tweet(tweet)
+      assert_receive {:new_tweet, ^tweet}, 100
     end
 
-    test "ignores messages that are not tweets" do
-      message = %ExTwitter.Model.User{}
-      TwitterFakeAdapter.simulate_incoming_message(message)
-      :timer.sleep(100)
-
-      tweets = Twitter.Timeline.tweets
-
-      assert tweets == []
-    end
-
-    test "removes a deleted tweet" do
-      [
-        %ExTwitter.Model.Tweet{id: 1},
-        %ExTwitter.Model.Tweet{id: 2},
-        %ExTwitter.Model.DeletedTweet{status: %{id: 2}}
+    test "publishes full list of tweets upon reception of a deleted tweet form the adapter",
+      %{adapter: adapter}
+    do
+      tweets = [
+        %Tweet{id: 1},
+        %Tweet{id: 2}
       ]
-      |> Enum.each(&TwitterFakeAdapter.simulate_incoming_message/1)
-      :timer.sleep(100)
+      deleted_tweet = %TweetDeletion{tweet_id: 2}
 
-      tweets = Twitter.Timeline.tweets
+      Enum.each(tweets ++ [deleted_tweet], &adapter.stream_tweet/1)
 
-      assert tweets == [%ExTwitter.Model.Tweet{id: 1}]
-      assert_received {:all_tweets, ^tweets}
+      expected_tweets = [%Tweet{id: 1}]
+      assert_receive {:all_tweets, ^expected_tweets}, 100
     end
+  end
+
+  # As suggested here: https://elixirforum.com/t/how-to-stop-otp-processes-started-in-exunit-setup-callback/3794/5
+  defp assert_down(pid) do
+    ref = Process.monitor(pid)
+    assert_receive {:DOWN, ^ref, _, _, _}
   end
 end

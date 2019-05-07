@@ -1,4 +1,6 @@
-defmodule TwitterFakeAdapter do
+defmodule Twitter.Adapter.Fake do
+  @behaviour Twitter.Adapter
+
   # Public interface
 
   def start_link(_opts \\ []) do
@@ -11,20 +13,24 @@ defmodule TwitterFakeAdapter do
     {:ok, %{queue: queue, tweets: []}}
   end
 
-  def set_initial_tweets(tweets) do
-    GenServer.call(__MODULE__, {:set_tweets, List.wrap(tweets)})
-  end
-
+  @spec fetch_user_timeline() :: [Twitter.Tweet.t]
   def fetch_user_timeline do
     GenServer.call(__MODULE__, :tweets)
   end
 
+  @spec get_user_stream() :: Stream.t
   def get_user_stream do
     GenServer.call(__MODULE__, :get_stream)
   end
 
-  def simulate_incoming_message(tweet) do
-    GenServer.call(__MODULE__, {:push_tweet, tweet})
+  # Functions for simulating a real adapter
+
+  def put_tweets(tweets) do
+    GenServer.call(__MODULE__, {:set_tweets, tweets})
+  end
+
+  def stream_tweet(tweet) do
+    GenServer.call(__MODULE__, {:stream_tweet, tweet})
   end
 
   # Server Callbacks
@@ -43,7 +49,7 @@ defmodule TwitterFakeAdapter do
     {:reply, tweets, %{state | tweets: tweets}}
   end
 
-  def handle_call({:push_tweet, tweet}, _from, %{queue: pid} = state) do
+  def handle_call({:stream_tweet, tweet}, _from, %{queue: pid} = state) do
     BlockingQueue.push(pid, tweet)
 
     {:reply, :ok, state}

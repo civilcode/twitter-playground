@@ -10,7 +10,7 @@ defmodule Twitter.Application do
     PubSub.start_link()
 
     # Define workers and child supervisors to be supervised
-    children = twitter_workers()
+    children = workers(Mix.env)
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
@@ -18,11 +18,10 @@ defmodule Twitter.Application do
     Supervisor.start_link(children, opts)
   end
 
-  defp twitter_workers do
-    if Application.get_env(:twitter, :enable_workers, false) do
-      [worker(Twitter.Timeline, [])]
-    else
-      []
-    end
+  defp workers(:test), do: []
+  defp workers(_) do
+    [
+      worker(Twitter.Timeline, [])
+    ]
   end
 end
